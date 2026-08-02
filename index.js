@@ -19,6 +19,14 @@ const db = new sqlite.Database('./tasks.db', (err) => {
     }
 })
 
+const isDone = (done) => {
+  if (done === 1) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 app.get('/tasks', async (req, res) => {
   const tasks = await new Promise((resolve, reject) => {
     db.all('SELECT * FROM tasks', (err, rows) => {
@@ -29,7 +37,11 @@ app.get('/tasks', async (req, res) => {
       }
     });
   });
-  res.json(tasks);
+  res.json(tasks.map(task => ({
+    id: task.id,
+    title: task.title,
+    done: isDone(task.done)
+  })));
 });
   
 app.get('/tasks/:id', async (req, res) => {
@@ -44,11 +56,32 @@ app.get('/tasks/:id', async (req, res) => {
     });
   });
   if (task) {
-    res.json(task);
+    res.json({
+      id: task.id,
+      title: task.title,
+      done: isDone(task.done)
+    });
   } else {
     res.status(404).json({ error: 'Task not found' });
   }
 }); 
+
+app.post('/tasks', express.json(), async (req, res) => {
+  const { title } = req.body;
+  if (!title) {
+    return res.status(400).json({ error: 'Title is required' });
+  }
+  const result = await new Promise((resolve, reject) => {
+    db.run('INSERT INTO tasks (title) VALUES (?)', [title], function(err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({ id: this.lastID, title, done: 0 });
+      }
+    });
+  });
+  res.status(201).json(result); 
+});
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
