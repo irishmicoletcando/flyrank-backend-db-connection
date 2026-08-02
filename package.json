@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/irishmicoletcando/flyrank-backend-db-connection#readme",
   "dependencies": {
+    "express": "^5.2.1",
     "expressjs": "^1.0.1",
     "sqlite3": "^6.0.1"
   }
